@@ -1,0 +1,143 @@
+# step10에서는 계산 함수들을 좀 더 유용하게 바꾸려고 한다.
+import numpy as np
+
+class Variable:
+    def __init__(self, data):
+
+        if data is not None:
+            if not isinstance(data, np.ndarray):
+                raise TypeError('{}은(는) 지원하지 않습니다.'.format(type(data)))
+
+        self.data = data
+        self.grad = None
+        self.creator = None
+
+    def set_creator(self, f):
+        self.creator = f
+
+    def backward(self):
+        if self.grad is None:
+            self.grad = np.ones_like(self.data)
+
+        funcs = [self.creator]
+        
+        while funcs:
+            f = funcs.pop()
+            x, y = f.input, f.output
+            x.grad = f.backward(y.grad)
+
+            if x.creator is not None:
+                funcs.append(x.creator)
+
+class Function:
+    def __call__(self, input):
+        x = input.data
+        y = self.forward(x)
+        output = Variable(as_array(y))
+        
+        output.set_creator(self)
+        
+        self.input = input
+        self.output = output
+
+        return output
+
+    def forward(self, x):   
+        raise NotImplementedError()
+
+    def backward(self, gy):
+        raise NotImplementedError()
+
+
+class Square(Function):
+    def forward(self, x):
+        return x ** 2
+
+    def backward(self, gy):
+        x = self.input.data
+        gx = 2 * x * gy
+        return gx
+
+
+class Exp(Function):
+    def forward(self, x):
+        return np.exp(x)
+
+    def backward(self, gy):
+        x = self.input.data
+        gx = np.exp(x) * gy
+
+        return gx
+
+
+# Square, Exp 함수들을 좀 더 유용하게 변경
+def square(x):
+    return Square()(x)
+
+def exp(x):
+    return Exp()(x)
+
+
+# numpy type만 작동되도록 해주는 편의 함수 구현
+def as_array(x):
+    if np.isscalar(x):
+        return np.array(x)
+    return x
+
+# test result 
+x = Variable(np.array(0.5))
+
+
+y = square(exp(square(x)))
+
+a = square(x)
+b = exp(a)
+y = square(b)
+
+print('y 결과값 : ', y.data)
+
+y.grad = np.array(1.0)
+y.backward()
+
+print('b의 grad : ', b.grad)
+print('a의 grad : ', a.grad)
+print(x.grad)
+
+#
+#x = np.array(1.0)
+#y = x ** 2
+#print(type(x), x.ndim)
+#print(type(y))
+
+# 역전파와 수치미분으로 구한 값에 차이가 있는지 확인
+# 차이가 있ㄷ면 역전파가 문제가 존재한다고 판단
+def numerical_diff(f, x, eps=1e-4):
+    x0 = Variable(x.data - eps)
+    x1 = Variable(x.data + eps)
+    y0 = f(x0)
+    y1 = f(x1)
+    return (y1.data - y0.data) / (2*eps)
+
+# 파이선 단위 테스트 해보기
+import unittest
+
+class SquareTest(unittest.TestCase):
+    def test_forward(self):
+        x = Variable(np.array(3.0))
+        y = square(x)
+        print('y값의  type 확인 : ',y)
+        y.backward()
+
+        expected = np.array(6.0)
+        self.assertEqual(x.grad, expected)
+    
+    def test_gradient_check(self):
+        x = Variable(np.random.rand(1))
+        y = square(x)
+        y.backward()
+        num_grad = numerical_diff(square, x)
+        flag = np.allclose(x.grad, num_grad)
+        self.assertTrue(flag)
+unittest.main()
+
+
