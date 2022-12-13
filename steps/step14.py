@@ -1,38 +1,43 @@
-# step13에서는 역전파의 가변인자를 활용하려고 한다.
+# step14에서는 같은 변수를 사용 가능하도록 한다.
 import numpy as np
 
 class Variable:
     def __init__(self, data):
-        self.data = data
-        self.grad = None
+        self.data =  data
+        self.grad = None 
         self.creator = None
 
     def set_creator(self, f):
         self.creator = f
+    
+    # 미분값을 초기화 해주는 함수 설정
+    def cleargrad(self):
+        self.grad = None
 
+    # 자동 미분 구현
     def backward(self):
         if self.grad is None:
             self.grad = np.ones_like(self.data)
 
         funcs = [self.creator]
+        print('funcs 확인 : ', funcs)
         while funcs:
             f = funcs.pop()
-            # 입출력이 여러개일 때를 가정하여 코드 구현
             gys = [output.grad for output in f.outputs]
-            print('--- gys 확인 : ', gys)
-            print('--- func 확인 : ', f)
             gxs = f.backward(*gys)
-            if not isinstance(gxs, tuple):
-                gxs = (gxs,)
-            
-            print('---- gxs 확인 : ', gxs)
-            print('--- f.input 확인 ; ', f.inputs)
-            for x, gx in zip(f.inputs, gxs):
-                x.grad = gx
 
+            if not isinstance(gxs, tuple):
+                gxs = (gxs, )
+
+            for x, gx in zip(f.inputs, gxs):
+                print('---- x.grad 확인 : ', x.grad)
+                if x.grad is None:
+                    x.grad = gx
+                else:
+                    x.grad = x.grad + gx
+            
                 if x.creator is not None:
                     funcs.append(x.creator)
-                
 
 def as_array(x):
     if np.isscalar(x):
@@ -42,21 +47,22 @@ def as_array(x):
 class Function:
     def __call__(self, *inputs):
         xs = [input.data for input in inputs]
-        print('inputs 값 확인 단계 : ', xs)
         ys = self.forward(*xs)
-
+        
+        # ys가 ndarray가 아닌 np.float이 될 수도 있으므로 tuple로 변경
         if not isinstance(ys, tuple):
-            ys = (ys,)
+            ys = (ys, )
 
         outputs = [Variable(as_array(y)) for y in ys]
-        
-        for output in outputs:
-            output.set_creator(self)
 
+        for output in outputs:
+            print('--- output 값 ㅎ확인 : ', output)
+            output.set_creator(self)
+        
         self.inputs = inputs
         self.outputs = outputs
 
-        return  outputs if len(outputs) > 1 else outputs[0]
+        return outputs if len(outputs) > 1 else outputs[0]
 
     def forward(self, x):
         raise NotImplementedError()
@@ -65,19 +71,6 @@ class Function:
         raise NotImplementedError()
 
 
-class Add(Function):
-    def forward(self, x0, x1):
-        y = x0 + x1
-        return (y,)
-
-    # 덧셈의 역전파는 그대로 흘러들어온다.
-    def backward(self, gy):
-        return gy, gy
-            
-def add(x0, x1):
-    return Add()(x0, x1)
-
-# Square 클래스 정의
 class Square(Function):
     def forward(self, x):
         return x ** 2
@@ -90,13 +83,29 @@ class Square(Function):
 def square(x):
     return Square()(x)
 
+class Add(Function):
+    def forward(self, x0, x1):
+        y = x0 + x1
+        return (y,)
 
-x0 = Variable(np.array(2.0))
-x1 = Variable(np.array(3.0))
+    def backward(self, gy):
+        return gy, gy
 
-z = add(square(x0), square(x1))
-z.backward()
+def add(x0, x1):
+    return Add()(x0, x1)
 
-print(z.data)
-print(x0.grad)
-print(x1.grad)
+x = Variable(np.array(3.0))
+y = add(add(x,x), x)
+y.backward()
+print(x.grad)
+
+# 이어서 두번재 계산 수행
+y = add(add(x,x),x)
+y.backward()
+print(x.grad)
+
+# grad를 초기화 한 뒤의 계산
+x.cleargrad()
+y = add(add(x,x),x)
+y.backward()
+print(x.grad)
