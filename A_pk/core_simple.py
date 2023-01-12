@@ -2,6 +2,7 @@
 
 import numpy as np
 import weakref
+import A_pk
 
 class Config:
     enable_backprop = True
@@ -66,7 +67,7 @@ class Variable:
                     y().grad = None
 
     @property
-    def shpae(self):
+    def shape(self):
         return self.data.shape
 
     @property
@@ -85,6 +86,23 @@ class Variable:
             return 'variable(None)'
         p = str(self.data).replace('\n', '\n'+' '*9)
         return 'variable(' + p + ')'
+
+    def reshape(self, *shape):
+        print('shape 확인 : ',shape)
+        '''
+        Variable type에서 reshape를 사용시 tuple, list, 인자값 각각을 받기 위한 처리
+        '''
+        if len(shape) == 1 and isinstance(shape[0], (tuple, list)):
+            shape = shape[0]
+
+        return A_pk.functions.reshape(self, shape) 
+   
+    def transpose(self):
+        return A_pk.functions.transpose(self)
+
+    @property
+    def T(self):
+        return A_pk.functions.transpose(self)
 
 
 def as_array(x):

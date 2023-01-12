@@ -76,3 +76,41 @@ class Tanh(Function):
 def tanh(x):
     return Tanh()(x)
 
+
+# reshape 클래스 만들기
+class Reshape(Function):
+    '''
+    x.data.shape == x.grad.shape가 되게 구현해야 한다.
+    '''
+    def __init__(self, shape):
+        self.shape = shape
+
+    def forward(self, x):
+        self.x_shape = x.shape  # 원래 x의 shape를 저장한다.
+        y = x.reshape(self.shape)
+        return y
+
+    def backward(self, gy):
+        '''
+        gy가 Variable 타입이므로 reshape를 할 때에도 Variable 전용 reshape를 사용해야 한다.
+        '''
+        return reshape(gy, self.x_shape)
+
+# Variable reshape 함수 구현
+def reshape(x, shape):
+    if x.shape == shape:
+        as_variable(x)
+    return Reshape(shape)(x)
+
+# transpose 클래스 구현
+class Transpose(Function):
+    def forward(self, x):
+        y = np.transpose(x)
+        return y
+
+    def backward(self, gy):
+        gx = transpose(gy) # gy가 Variable이므로 transpose라는 함수를 사용하여 계산한다.
+        return gx
+
+def transpose(x):
+    return Transpose()(x)
