@@ -104,6 +104,8 @@ class Variable:
     def T(self):
         return A_pk.functions.transpose(self)
 
+    def sum(self, axis=None, keepdims=False):
+        return A_pk.functions.sum(self, axis, keepdims)
 
 def as_array(x):
     if np.isscalar(x):

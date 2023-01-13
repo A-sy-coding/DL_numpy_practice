@@ -64,3 +64,21 @@ def plot_dot_graph(output, verbose=True, to_file='graph.png'):
     extension = os.path.splitext(to_file)[1][1:]
     cmd = 'dot {} -T {} -o {}'.format(graph_path, extension, to_file)
     subprocess.run(cmd, shell=True)
+
+# sum_to 함수 구현 
+def sum_to(x, shape):
+    ''' matrix값의 합들을 구하도록 한다. '''
+    ndim = len(shape)
+    lead = x.dim - ndim # 합을 구할 것이므로 변경된 차원은 기존 차원보다 더 작을 것이다.
+    lead_axis = tuple(range(lead))
+
+    print('기존 차원과 변경될 차원의 차이 : ', lead)
+    print('lead axis : ', lead_axis)
+
+    axis = tuple([i + lead for i, sx in enumerate(shape) if sx == 1])
+    y = x.sum(lead_axis + axis, keepdims=True)
+    
+    if lead > 0:
+        y = y.squeeze(lead_axis)
+
+    return y
