@@ -163,11 +163,18 @@ def sqaure(x):
 
 class Add(Function):
     def forward(self, x0, x1):
+        self.x0_shape, self.x1_shape = x0.shape, x1.shape # broadcast 수행 준비
         y = x0 + x1
         return (y,)
 
     def backward(self, gy):
-        return gy, gy
+        gx0, gx1 = gy, gy
+
+        # shape가 같지 않으면, broadcast가 수행되도록 한다.
+        if self.x0_shape != self.x1_shape:
+            gx0 = A_pk.functions.sum_to(gx0, self.x0_shape) 
+            gx1 = A_pk.functions.sum_to(gx1, self.x1_shape)
+        return gx0, gx1 
 
 def add(x0, x1):
     x1 = as_array(x1)
