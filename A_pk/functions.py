@@ -195,3 +195,24 @@ class Matmul(Function):
 
 def matmul(x, W):
     return Matmul()(x, W)
+
+# mean_square_error function
+class MeanSquaredError(Function):
+    ''' 
+    메모리 차지하는 것을 줄이기 위해 Variable끼리 계산이 아닌 ndarray 계산으로 변경
+    '''
+    def forward(self, x0, x1):
+        diff = x0 - x1
+        y = (diff ** 2).sum() / len(diff)
+        return y
+
+    def backward(self, gy):
+        ''' backward시 Variable 계산이 아닌 ndarray 계산으로 구현함 -> 메모리 절약'''
+        x0, x1 = self.inputs
+        diff = x0 - x1
+        gx0 = gy * diff * (2. / len(diff))
+        gx1 = -gx0
+        return gx0, gx1
+
+def mean_squared_error(x0, x1):
+    MeanSquaredError()(x0, x1)

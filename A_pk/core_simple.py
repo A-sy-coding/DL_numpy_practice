@@ -124,7 +124,7 @@ class Function:
 
         xs = [input.data for input in inputs]
         ys = self.forward(*xs)
-
+        
         if not isinstance(ys, tuple):
             ys = (ys, )
 
@@ -139,6 +139,7 @@ class Function:
 
             self.inputs = inputs
             self.outputs = [weakref.ref(output) for output in outputs]
+
 
         return outputs if len(outputs) > 1 else outputs[0]
 

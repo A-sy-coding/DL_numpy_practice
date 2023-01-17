@@ -72,13 +72,13 @@ def sum_to(x, shape):
     lead = x.ndim - ndim # 합을 구할 것이므로 변경된 차원은 기존 차원보다 더 작을 것이다.
     lead_axis = tuple(range(lead))
 
-    print('기존 차원과 변경될 차원의 차이 : ', lead)
-    print('lead axis : ', lead_axis)
+#    print('기존 차원과 변경될 차원의 차이 : ', lead)
+#    print('lead axis : ', lead_axis)
 
     axis = tuple([i + lead for i, sx in enumerate(shape) if sx == 1])
 
-    print('axis 값 확인 : ', axis)
-    print('axis + load_axis : ', lead_axis + axis)
+#    print('axis 값 확인 : ', axis)
+#    print('axis + load_axis : ', lead_axis + axis)
     y = x.sum(lead_axis + axis, keepdims=True)
     
     if lead > 0:
