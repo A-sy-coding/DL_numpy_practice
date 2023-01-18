@@ -198,21 +198,73 @@ def matmul(x, W):
 
 # mean_square_error function
 class MeanSquaredError(Function):
-    ''' 
-    메모리 차지하는 것을 줄이기 위해 Variable끼리 계산이 아닌 ndarray 계산으로 변경
-    '''
     def forward(self, x0, x1):
         diff = x0 - x1
         y = (diff ** 2).sum() / len(diff)
         return y
 
     def backward(self, gy):
-        ''' backward시 Variable 계산이 아닌 ndarray 계산으로 구현함 -> 메모리 절약'''
+        ''' ndarray 계산으로 memory 절약 가능'''
         x0, x1 = self.inputs
         diff = x0 - x1
         gx0 = gy * diff * (2. / len(diff))
         gx1 = -gx0
         return gx0, gx1
 
+
 def mean_squared_error(x0, x1):
-    MeanSquaredError()(x0, x1)
+    return MeanSquaredError()(x0, x1)
+
+# 간단한 linear 신경망 함수
+def linear_sample(x, W, b=None):
+    '''
+    순전파를 수행할 때에는 x, W, b, t 모두 필요하지만,
+    역전파를 수행할 때에는 b가 필요없게 된다. (덧셈의 역전파는 그대로 흘러들어가는 것이기 때문)
+    '''
+    t = matmul(x,W)
+    if b is None:
+        return t
+
+    y = t + b
+    t.data = None
+    return y
+
+# Linear Class 구현
+class Linear(Function):
+    def forward(self, x, W, b):
+        y = x.dot(W)
+        if b is None:
+            return y
+
+        y += b
+        return y
+
+    def backward(self, gy):
+        x, W, b = self.inputs
+        gb = None if b.data is None else sum_to(gy, b.shape) # 형상 유지를 위함
+        gx = matmul(gy, W.T)
+        gW = matmul(x.T, gy)
+        return gx, gW, gb
+
+def linear(x, W, b=None):
+    return Linear()(x, W, b)
+
+# simple Sigmoid 활성화 함수 구현
+def sigmoid_simple(x):
+    x = as_variable(x)
+    y = 1 / (1 + exp(-x)) # Variable끼리의 계산
+    return y
+
+# Sigmoid 구현
+class Sigmoid(Function):
+    def forward(self, x):
+        y = np.tanh(x + 0.5) * 0.5 + 0.5 # 더 나은 실행 방법
+        return y
+
+    def backward(self, gy):
+        y = self.outputs[0]()
+        gx = gy * y * (1-y)
+        return gx
+
+def sigmoid(x):
+    return Sigmoid()(x)

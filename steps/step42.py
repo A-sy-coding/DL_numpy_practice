@@ -54,10 +54,11 @@ y_store = []
 for i in range(iters):
     y_pred = predict(x)
     y_store.append(y_pred.data[0][0])
-    loss = ean_squared_error(y_pred, y)
+    loss = F.mean_squared_error(y_pred, y)
     
     W.cleargrad()
     b.cleargrad()
+    loss.cleargrad()
     loss.backward()
 
     # 경사 하강법
