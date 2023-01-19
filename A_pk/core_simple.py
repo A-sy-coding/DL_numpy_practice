@@ -292,3 +292,7 @@ def using_config(name, value):
 
 def no_grad():
     return using_config('enable_backprop', False)
+
+# Parameter 저장 클래스 -> Variable 상속
+class Parameter(Variable):
+    pass

@@ -1,4 +1,4 @@
-from A_pk.core_simple import Variable
+from A_pk.core_simple import Variable, Parameter
 from A_pk.core_simple import Function
 from A_pk.core_simple import using_config
 from A_pk.core_simple import no_grad
