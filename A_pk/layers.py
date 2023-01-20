@@ -10,7 +10,7 @@ class Layer:
 
     def __setattr__(self, name, value):
         ''' value가 Parameter instance이면 저장한다.'''
-        if isinstance(value, Parameter):
+        if isinstance(value, (Parameter, Layer)):
             self._params.add(name)
         super().__setattr__(name, value)
 
@@ -31,8 +31,16 @@ class Layer:
 
     def params(self):
         ''' Parameter instance 꺼내기'''
+
         for name in self._params:
-            yield self.__dict__[name]
+            obj =  self.__dict__[name]
+            
+            # Layer 안에 Layer를 만들고 해당 Layer 안에서 Parameter 클래스 정의
+            if isinstance(obj, Layer):
+                yield from obj.params()
+            else:
+                yield obj
+
 
     def cleargrads(self):
         ''' 모든 매개변수 기울기 재설정'''
@@ -90,3 +98,5 @@ class Linear(Layer):
 
         y = F.linear(x, self.W, self.b)
         return y
+
+

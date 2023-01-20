@@ -6,6 +6,9 @@ from A_pk.core_simple import as_array
 from A_pk.core_simple import as_variable
 from A_pk.core_simple import setup_variable
 
+from A_pk.layers import Layer
+from A_pk.models import Model
+
 import A_pk.functions
 
 setup_variable()
