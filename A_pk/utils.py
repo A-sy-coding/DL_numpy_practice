@@ -1,6 +1,7 @@
 # 계산 그래프 함수
 import os
 import subprocess
+import numpy as np
 
 def _dot_var(v, verbose=False):
     dot_var = '{} [label="{}", color=orange, style=filled]\n'
@@ -85,3 +86,15 @@ def sum_to(x, shape):
         y = y.squeeze(lead_axis)
 
     return y
+
+#-- log sum exp function 구현
+def logsumexp(x, axis=1):
+    m = x.max(axis=axis, keepdims=True)
+    print('m : ', m)
+    y = x - m
+    print('y : ', y)
+    np.exp(y, out=y)
+    s = y.sum(axis=axis, keepdims=True)
+    np.log(s, out=s)
+    m += s
+    return m
