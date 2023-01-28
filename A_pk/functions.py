@@ -358,9 +358,9 @@ def softmax_cross_entropy_simple(x, t):
     p = softmax(x)
     p = clip(p, 1e-15, 1.0) # log0 방지
     log_p = log(p)
-    print('log_p : ', log_p)
+    # print('log_p : ', log_p)
     tlog_p = log_p[np.arange(N), t.data]
-    print('tlog_p : ', tlog_p)
+    # print('tlog_p : ', tlog_p)
     y = -1 * sum(tlog_p) / N
     return y
 

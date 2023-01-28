@@ -90,9 +90,7 @@ def sum_to(x, shape):
 #-- log sum exp function 구현
 def logsumexp(x, axis=1):
     m = x.max(axis=axis, keepdims=True)
-    print('m : ', m)
     y = x - m
-    print('y : ', y)
     np.exp(y, out=y)
     s = y.sum(axis=axis, keepdims=True)
     np.log(s, out=s)
